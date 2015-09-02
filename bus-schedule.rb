@@ -1,4 +1,4 @@
-#!/bin/env ruby
+#!/usr/bin/env ruby
 require 'active_record'
 
 # Only for testing purpose
@@ -85,8 +85,22 @@ end
 # Demonstration
 
 # pretty print helpers
+BANNER_LENGTH = 60
+
+def print_banner(banner)
+    # default terminal length
+    paddingLen = BANNER_LENGTH - banner.length - 2
+    paddingLenL = paddingLenR = paddingLen / 2
+
+    unless paddingLen % 2 == 0
+        paddingLenR += 1
+    end
+
+    print '=' * paddingLenL, ' ', banner, ' ', '=' * paddingLenR, "\n"
+end
+
 def print_all_buses(banner)
-    puts banner
+    print_banner banner
     Bus.all.each { |bus| 
         print bus.schedule.arrival_time.strftime("%T"), "\tBus Line ", bus.bus_line.number ,"\n"
     }
@@ -95,8 +109,9 @@ end
 # define 20 dummy bus stops
 busStops = 1.upto(20).map { |i| BusStop.create(:code => "S%#02d" % i) }
 
-puts "==================== 20 bus stops defined ===================="
-puts BusStop.all.map { |s| s.code }.join(",")
+print_banner "20 bus stops defined"
+puts BusStop.all.limit(10).map { |s| s.code }.join(",")
+puts BusStop.all.offset(10).limit(10).map { |s| s.code }.join(",")
 
 # define 10 routes (5 pairs of forward and return routes)
 routeGroups = 1.upto(5).map { |i| 
@@ -110,7 +125,7 @@ routeGroups = 1.upto(5).map { |i|
       Route.create(:name => "#{name} R", :bus_stops => route_stops.reverse)]
 }
 
-puts "==================== 10 routes defined ===================="
+print_banner "10 routes defined"
 Route.all.each { |route|
     print route.name, " \t[", route.bus_stops.map { |s| s.code }.join(","), "]\n"
 }
@@ -120,29 +135,28 @@ busLines = routeGroups.each_with_index.map { |routes, i|
     BusLine.create(:number => i, :routes => routes)
 }
 
-puts "==================== 5 bus lines defined ===================="
+print_banner "5 bus lines defined"
 BusLine.all.each { |busLine|
     print "Line ", busLine.number, "\t\t[", busLine.routes.map { |r| r.name }.join(","), "]\n"
 }
-
 
 # define 5 buses
 schedule = Schedule.create(:arrival_time => Time.now)
 buses = busLines.map { |busLine|
     Bus.create(:schedule => schedule, :bus_line => busLine)
 }
-print_all_buses "==================== 5 buses defined ===================="
+print_all_buses "5 buses defined"
 
 # add another 5 buses
 schedule = Schedule.create(:arrival_time => (Time.now + 60 * 15))
 busLines.each { |busLine|
     Bus.create(:schedule => schedule, :bus_line => busLine)
 }
-print_all_buses "==================== after add another 5 buses ===================="
+print_all_buses "after add another 5 buses"
 
 # delete all buses in line 4
 Bus.all.select { |bus| bus.bus_line.number == 4 }.each { |bus| bus.destroy }
-print_all_buses "==================== after delete buses in line 4 ===================="
+print_all_buses "after delete buses in line 4"
 
 # reassign first bus to line 4
 schedule = Schedule.all.last
@@ -152,6 +166,6 @@ bus = Bus.all.first
 #bus.schedule = schedule
 bus.bus_line = busLine
 bus.save
-print_all_buses "==================== after reassign bus to line 4 ===================="
+print_all_buses "after re-assign the first bus to line 4"
 
 
