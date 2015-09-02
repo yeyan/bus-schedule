@@ -1,12 +1,13 @@
 #!/bin/env ruby
 require 'active_record'
 
-ActiveRecord::Base.logger = Logger.new(File.open('database.log', 'w'))
+# Only for testing purpose
+# ActiveRecord::Base.logger = Logger.new(File.open('database.log', 'w'))
 
 # establish database connection 
 ActiveRecord::Base.establish_connection(
     :adapter  => 'sqlite3',
-    :database => 'bus-schedule.db'
+    :database => ':memory:'
 )
 
 ######################################################################
@@ -83,6 +84,14 @@ end
 ######################################################################
 # Demonstration
 
+# pretty print helpers
+def print_all_buses(banner)
+    puts banner
+    Bus.all.each { |bus| 
+        print bus.schedule.arrival_time.strftime("%T"), "\tBus Line ", bus.bus_line.number ,"\n"
+    }
+end
+
 # define 20 dummy bus stops
 busStops = 1.upto(20).map { |i| BusStop.create(:code => "S%#02d" % i) }
 
@@ -116,42 +125,33 @@ BusLine.all.each { |busLine|
     print "Line ", busLine.number, "\t\t[", busLine.routes.map { |r| r.name }.join(","), "]\n"
 }
 
-def print_all_buses()
-    Bus.all.each { |bus| 
-        print bus.schedule.arrival_time.strftime("%T"), "\tBus Line ", bus.bus_line.number ,"\n"
-    }
-end
 
 # define 5 buses
 schedule = Schedule.create(:arrival_time => Time.now)
 buses = busLines.map { |busLine|
     Bus.create(:schedule => schedule, :bus_line => busLine)
 }
-puts "==================== 5 buses defined ===================="
-print_all_buses
+print_all_buses "==================== 5 buses defined ===================="
 
 # add another 5 buses
 schedule = Schedule.create(:arrival_time => (Time.now + 60 * 15))
 busLines.each { |busLine|
     Bus.create(:schedule => schedule, :bus_line => busLine)
 }
-puts "==================== after add another 5 buses ===================="
-print_all_buses
+print_all_buses "==================== after add another 5 buses ===================="
 
 # delete all buses in line 4
 Bus.all.select { |bus| bus.bus_line.number == 4 }.each { |bus| bus.destroy }
-puts "==================== after delete buses in line 4 ===================="
-print_all_buses
+print_all_buses "==================== after delete buses in line 4 ===================="
 
 # reassign first bus to line 4
 schedule = Schedule.all.last
 busLine = BusLine.all.last
 bus = Bus.all.first
 
-bus.schedule = schedule
+#bus.schedule = schedule
 bus.bus_line = busLine
 bus.save
-puts "==================== after reassign bus to line 4 ===================="
-print_all_buses
+print_all_buses "==================== after reassign bus to line 4 ===================="
 
 
