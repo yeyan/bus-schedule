@@ -15,6 +15,5 @@ Tested on:
 ```bash
     $ git clone https://github.com/yeyan/bus-schedule.git
     cd bus-schedule
-    chmod +x *rb
-    ./bus-schedule.rb
+    ruby bus-schedule.rb
 ```
