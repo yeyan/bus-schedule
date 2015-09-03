@@ -155,7 +155,8 @@ busLines.each { |busLine|
 print_all_buses "after add another 5 buses"
 
 # delete all buses in line 4
-Bus.all.select { |bus| bus.bus_line.number == 4 }.each { |bus| bus.destroy }
+
+Bus.joins(:bus_line).where(:bus_lines => {:number => 4}).each { |bus| bus.destroy }
 print_all_buses "after delete buses in line 4"
 
 # reassign first bus to line 4
